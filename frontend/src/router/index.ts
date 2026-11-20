@@ -6,6 +6,7 @@ const DimRegistry = () => import('@/views/dim_registry/index.vue')
 const AggTask = () => import('@/views/agg_task/index.vue')
 const CubeBuilder = () => import('@/views/cube_builder/index.vue')
 const CohortRule = () => import('@/views/cohort_rule/index.vue')
+const CohortExtraction = () => import('@/views/cohort_extraction/index.vue')
 const Experiment = () => import('@/views/experiment/index.vue')
 const TrendSeries = () => import('@/views/trend_series/index.vue')
 const Attribution = () => import('@/views/attribution/index.vue')
@@ -29,6 +30,7 @@ const router = createRouter({
     { path: '/agg_task', name: 'agg_task', component: AggTask },
     { path: '/cube_builder', name: 'cube_builder', component: CubeBuilder },
     { path: '/cohort_rule', name: 'cohort_rule', component: CohortRule },
+    { path: '/cohort_extraction', name: 'cohort_extraction', component: CohortExtraction },
     { path: '/experiment', name: 'experiment', component: Experiment },
     { path: '/trend_series', name: 'trend_series', component: TrendSeries },
     { path: '/attribution', name: 'attribution', component: Attribution },

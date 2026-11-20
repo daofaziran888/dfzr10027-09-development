@@ -128,6 +128,19 @@ COHORT_USERS: list[dict] = [
 ]
 
 # ---------------------------------------------------------------------------
+# 5.1 华东促销分群（cohort_rule）——排除标签与待判校验的三名顾客
+# 三人都已过消费门槛；一个带排除标签、一个标签尚未送达、一个符合条件。
+# ---------------------------------------------------------------------------
+PROMOTION_COHORT_USERS: list[dict] = [
+    {"user_id": "E10001", "region": "华东", "channel": "app", "ltv": 1800.0,
+     "last_order_date": "2026-11-10", "tag": "促销排除"},
+    {"user_id": "E10002", "region": "华东", "channel": "app", "ltv": 2200.0,
+     "last_order_date": "2026-11-12", "tag": None},
+    {"user_id": "E10003", "region": "华东", "channel": "小程序", "ltv": 1500.0,
+     "last_order_date": "2026-11-15", "tag": "高价值"},
+]
+
+# ---------------------------------------------------------------------------
 # 6. 归因触点（attribution）——用户转化路径
 # ---------------------------------------------------------------------------
 ATTRIBUTION_TOUCHES: list[dict] = [
@@ -170,6 +183,7 @@ FIXTURE_DATASETS: dict[str, list[dict]] = {
     "_trend_points": TREND_POINTS,
     "_experiment_results": EXPERIMENT_RESULTS,
     "_cohort_users": COHORT_USERS,
+    "_promotion_cohort_users": PROMOTION_COHORT_USERS,
     "_attribution_touches": ATTRIBUTION_TOUCHES,
     "_data_mart_rows": DATA_MART_ROWS,
     "_quality_samples": QUALITY_CHECK_SAMPLES,

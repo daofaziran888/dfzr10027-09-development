@@ -55,8 +55,20 @@ def trigger_cube(
 
 
 @router.post("/cohort-extract", response_model=ActionResult)
-def trigger_cohort_extract() -> ActionResult:
-    result = run_cohort_extract_pipeline()
+def trigger_cohort_extract(
+    region: str | None = Query(default=None, description="区域，如 华东"),
+    min_ltv: float | None = Query(default=None, description="消费门槛 LTV"),
+    exclude_tags: list[str] | None = Query(default=None, description="排除标签，可重复传入"),
+) -> ActionResult:
+    """执行分群提取管道；传 exclude_tags 时按排除规则校验，待判与排除都不进交付名单。"""
+    rule: dict[str, object] = {}
+    if region is not None:
+        rule["region"] = region
+    if min_ltv is not None:
+        rule["min_ltv"] = min_ltv
+    if exclude_tags:
+        rule["exclude_tags"] = exclude_tags
+    result = run_cohort_extract_pipeline(rule or None)
     return ActionResult(ok=True, message="分群提取管道已执行", entry=result)
 
 

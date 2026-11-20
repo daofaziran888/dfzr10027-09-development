@@ -51,6 +51,11 @@ store = Store()
 
 
 def reset_store() -> None:
-    """重新初始化全局 store，用于测试隔离。"""
-    global store
-    store = Store()
+    """就地重置全局 store，用于测试隔离。
+
+    服务模块习惯在导入时 `from app.store import store` 持有同一份引用，
+    因此这里必须原地替换内部表而不是重新绑定全局变量，否则旧引用仍指向旧数据。
+    """
+    fresh = Store()
+    store._tables.clear()
+    store._tables.update(fresh._tables)

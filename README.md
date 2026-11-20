@@ -54,6 +54,7 @@ npm run dev
 | 聚合任务 | `agg_task` | 聚合计算 | 任务编号、目标指标、聚合维度 |
 | 多维立方体 | `cube_builder` | 数据立方体 | 立方体编号、事实来源、维度列表 |
 | 分群规则 | `cohort_rule` | 用户分群 | 分群编号、分群名称、筛选条件 |
+| 促销分群提取 | `cohort_extraction` | 促销名单 | 核实范围、待判人数、交付名单 |
 | 实验管理 | `experiment` | AB实验 | 实验编号、实验假设、分组方案 |
 | 时序分析 | `trend_series` | 时序序列 | 序列编号、观测指标、时间粒度 |
 | 归因模型 | `attribution` | 归因链路 | 链路编号、归因窗口、触点类型 |
@@ -74,6 +75,23 @@ npm run dev
   `backend/app/routers/<模块>.py`，业务规则在 `backend/app/services/<模块>.py`。
 - 列表接口统一返回 `{ items, total, page, size }`，动作接口统一返回 `{ ok, message }`。
 - 状态流转只允许在 `app/services` 里改，路由层不做业务判断。
+
+## 促销分群提取（cohort_extraction）
+
+华东促销名单按排除标签校验顾客，口径如下：
+
+- **核实范围**：先按分群规则（区域、消费门槛）圈出的候选顾客数。
+- **明确排除**：候选顾客命中排除标签，进入排除组，不进交付名单。
+- **待判**：缺少用于排除判定的标签（标签未送达），**不能视为已通过**，也不进交付名单。
+- **可交付名单**：只有标签齐全且未命中排除的顾客才会交付；分群报表只按这份名单汇总
+  人数、区域分布与 LTV 总额，接口同时返回待判人数。
+- **两轮提取**：标签补齐后重新提交提取会生成新一轮快照，旧轮次保持不变，
+  可按 `POST /api/cohort_extraction/runs/{run_id}/replay` 重放复查已交付名单与报表计数。
+
+接口：`GET /preview`（试算）、`POST /extract`（提交提取）、`POST /tags`（补齐标签）、
+`GET /runs`、`GET /reports`、`GET /runs/{run_id}`、`POST /runs/{run_id}/replay`。
+示例数据见 `backend/app/fixtures.py` 的 `PROMOTION_COHORT_USERS`（三名已过门槛的华东顾客：
+一个带排除标签、一个未收到标签、一个符合条件）。
 
 领域：数据工程
 子方向：数据分析与数据应用

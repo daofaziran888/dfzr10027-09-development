@@ -225,12 +225,29 @@ def run_cube_pipeline(dim_codes: list[str] | None = None) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 def run_cohort_extract_pipeline(rule: dict[str, Any] | None = None) -> dict[str, Any]:
-    """按分群规则过滤 fixtures 用户，执行数据提取，生成分群报表产物。"""
+    """按分群规则过滤 fixtures 用户，执行数据提取，生成分群报表产物。
+
+    规则带 exclude_tags 时走排除校验：候选顾客先按区域/渠道/门槛圈选，
+    命中排除标签的记为明确排除，缺少判定标签的记为待判；两者都不进交付名单，
+    报表只按实际交付名单汇总。未配置 exclude_tags 时保持原有包含式筛选口径。
+    """
     users = list(COHORT_USERS)
     if rule is None:
         rule = {"region": "华东", "min_ltv": 1000.0}
 
-    filtered = []
+    exclude_tags = rule.get("exclude_tags")
+    if exclude_tags is not None:
+        if isinstance(exclude_tags, str):
+            exclude_tags = [part.strip() for part in exclude_tags.replace("，", ",").split(",") if part.strip()]
+        else:
+            exclude_tags = [str(part).strip() for part in exclude_tags if str(part).strip()]
+    exclude_set = set(exclude_tags or [])
+
+    candidates: list[dict[str, Any]] = []
+    filtered: list[dict[str, Any]] = []
+    pending: list[dict[str, Any]] = []
+    excluded: list[dict[str, Any]] = []
+
     for u in users:
         match = True
         if "region" in rule and u.get("region") != rule["region"]:
@@ -241,10 +258,26 @@ def run_cohort_extract_pipeline(rule: dict[str, Any] | None = None) -> dict[str,
             match = False
         if "min_ltv" in rule and _to_float(u.get("ltv")) < _to_float(rule["min_ltv"]):
             match = False
-        if match:
-            filtered.append(u)
+        if not match:
+            continue
 
-    # 统计聚合
+        candidates.append(u)
+        tag = u.get("tag")
+        has_tag = tag is not None and str(tag).strip() != ""
+        if exclude_set:
+            if not has_tag:
+                pending.append({**u, "判定结果": "待判",
+                                "入选原因": "缺少用于排除判定的标签，待标签补齐后复核"})
+                continue
+            if str(tag).strip() in exclude_set:
+                excluded.append({**u, "判定结果": "明确排除",
+                                 "入选原因": f"命中排除标签「{str(tag).strip()}」"})
+                continue
+            filtered.append({**u, "判定结果": "已交付", "入选原因": "已过消费门槛，且未命中排除标签"})
+        else:
+            filtered.append({**u, "判定结果": "已交付", "入选原因": "命中分群筛选条件"})
+
+    # 统计聚合：只对实际交付名单汇总
     total_ltv = sum(_to_float(u["ltv"]) for u in filtered)
     avg_ltv = total_ltv / len(filtered) if filtered else 0.0
     region_dist: dict[str, int] = {}
@@ -254,8 +287,21 @@ def run_cohort_extract_pipeline(rule: dict[str, Any] | None = None) -> dict[str,
     result = {
         "rule": rule,
         "matched_count": len(filtered),
+        "delivered_count": len(filtered),
+        "pending_count": len(pending),
+        "excluded_count": len(excluded),
+        "verification_scope": len(candidates),
+        "usable": len(filtered) > 0,
         "users": filtered,
+        "pending_members": pending,
+        "excluded_members": excluded,
         "summary": {
+            "total_ltv": round(total_ltv, 2),
+            "avg_ltv": round(avg_ltv, 2),
+            "region_distribution": region_dist,
+        },
+        "report": {
+            "member_count": len(filtered),
             "total_ltv": round(total_ltv, 2),
             "avg_ltv": round(avg_ltv, 2),
             "region_distribution": region_dist,

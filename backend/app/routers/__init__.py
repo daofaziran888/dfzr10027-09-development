@@ -11,6 +11,7 @@ from app.routers import dim_registry as router_dim_registry
 from app.routers import agg_task as router_agg_task
 from app.routers import cube_builder as router_cube_builder
 from app.routers import cohort_rule as router_cohort_rule
+from app.routers import cohort_extraction as router_cohort_extraction
 from app.routers import experiment as router_experiment
 from app.routers import trend_series as router_trend_series
 from app.routers import attribution as router_attribution
@@ -26,4 +27,4 @@ from app.routers import api_service as router_api_service
 from app.routers import schedule_plan as router_schedule_plan
 from app.routers import pipeline as router_pipeline
 
-ROUTERS = [router_metric_def, router_dim_registry, router_agg_task, router_cube_builder, router_cohort_rule, router_experiment, router_trend_series, router_attribution, router_segmentation, router_report_gen, router_forecast, router_data_mart, router_stat_model, router_data_extract, router_quality_mon, router_compare_job, router_api_service, router_schedule_plan, router_pipeline]
+ROUTERS = [router_metric_def, router_dim_registry, router_agg_task, router_cube_builder, router_cohort_rule, router_cohort_extraction, router_experiment, router_trend_series, router_attribution, router_segmentation, router_report_gen, router_forecast, router_data_mart, router_stat_model, router_data_extract, router_quality_mon, router_compare_job, router_api_service, router_schedule_plan, router_pipeline]
